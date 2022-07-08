@@ -1,7 +1,8 @@
-# Gaussian Elimination without Partial Pivoting
+# Gauss Elimination without Partial Pivoting
 
 using LinearAlgebra
 
+# Gauss-Elimination process
 function gauss_elimination(a, b, n)
     for j = 1:n-1
         for k = j+1:n
@@ -14,6 +15,7 @@ function gauss_elimination(a, b, n)
     return
 end
 
+# Back-Substitution process
 function back_substitution(a, b, n)
     for j = n:-1:1
         b[j] = (b[j] - dot(a[j, j+1:n], b[j+1:n])) / a[j, j]
@@ -21,6 +23,7 @@ function back_substitution(a, b, n)
     return
 end
 
+# Check answer to calculate e = b-Ax
 function check_ans(savea, saveb, x, n, err)
     for j = 1:n
         if abs(saveb[j] - dot(savea[j, 1:n], x[1:n])) > err
@@ -36,6 +39,7 @@ n = parse(UInt64, readline())
 n = n-1
 err = 5.e-13
 
+# Initialize A, b: Using tridiagonal matrix 
 a = zeros(n, n) 
 for j = 1:n 
     a[j, j] = 2
@@ -46,6 +50,7 @@ end
 b = zeros(n)
 b[1] = 1
 
+# Copy A, b for check
 savea = copy(a) 
 saveb = copy(b)
 
