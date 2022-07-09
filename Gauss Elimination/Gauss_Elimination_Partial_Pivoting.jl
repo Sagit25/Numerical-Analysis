@@ -1,8 +1,9 @@
 # Gauss Elimination with partial pivoting
+# Solve Ax = b for Matrix Need Partial Pivoting
 
 using LinearAlgebra
 
-# Partial pivoting process
+# Partial pivoting
 function partial_pivoting(a, b, n, j)
     js = argmax(abs.(a[j:n, j]))+j-1
     tmp = copy(a[j, :])
@@ -14,7 +15,7 @@ function partial_pivoting(a, b, n, j)
     return
 end
 
-# Gauss-Elimination process with partial pivoting
+# Gauss-Elimination with partial pivoting
 function gauss_elimination(a, b, n)
     for j = 1:n-1
         partial_pivoting(a, b, n, j)
@@ -28,7 +29,7 @@ function gauss_elimination(a, b, n)
     return
 end
 
-# Back-Substitution process
+# Back-Substitution
 function back_substitution(a, b, n)
     for j = n:-1:1
         b[j] = (b[j] - dot(a[j, j+1:n], b[j+1:n])) / a[j, j]
@@ -54,11 +55,15 @@ err = 5.e-13
 
 # Initialize A, b: Using tridiagonal matrix 
 a = zeros(n, n) 
-for j = 1:n 
+for j = 1:n
     a[j, j] = 2
 end
 for j = 1:n-1
-    a[j, j+1] = a[j+1, j] = -1
+    a[j, j+1] = -1
+    a[j+1, j] = -1
+    a[j+1, 1] = (j+1)^3
+    a[1, j+1] = -(j+1)^2
+    a[n, j+1] = -1/(j+1)
 end
 b = zeros(n)
 b[1] = 1
