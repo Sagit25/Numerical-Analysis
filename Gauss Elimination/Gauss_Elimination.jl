@@ -1,8 +1,9 @@
 # Gauss Elimination without Partial Pivoting
+# Solve Ax = b for Tridiagonal Matrix
 
 using LinearAlgebra
 
-# Gauss-Elimination process
+# Gauss-Elimination
 function gauss_elimination(a, b, n)
     for j = 1:n-1
         for k = j+1:n
@@ -15,7 +16,7 @@ function gauss_elimination(a, b, n)
     return
 end
 
-# Back-Substitution process
+# Back-Substitution
 function back_substitution(a, b, n)
     for j = n:-1:1
         b[j] = (b[j] - dot(a[j, j+1:n], b[j+1:n])) / a[j, j]
