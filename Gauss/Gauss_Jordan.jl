@@ -3,78 +3,94 @@
 
 using LinearAlgebra
 
-    # Partial pivoting
-    function partial_pivoting(a, b, n, j)
-        js = argmax(abs.(a[j:n, j]))+j-1
-        tmp = copy(a[j, :])
-        a[j, :] = copy(a[js, :])
-        a[js, :] = copy(tmp)
-        tmp[j] = copy(b[j])
-        b[j] = copy(b[js])
-        b[js] = copy(tmp[j])
-        return
-    end
-    
-    # Gauss-Elimination with partial pivoting
-    function gauss_elimination(a, b, n)
-        for j = 1:n-1
-            partial_pivoting(a, b, n, j)
-            for k = j+1:n
-                m = a[k, j] / a[j, j]
-                a[k, j] = m 
-                a[k, j+1:n] = a[k, j+1:n] - m*a[j, j+1:n]
-                b[k] = b[k] - m*b[j]
-            end
+# Swap columns or rows
+function swap(a, j, k, op)
+    if op == 1
+        for n in axes(a, 1)
+            a[n, j], a[n, k] = a[n, k], a[n, j]
         end
-        return
-    end
-    
-    # Back-Substitution
-    function back_substitution(a, b, n)
-        for j = n:-1:1
-            b[j] = (b[j] - dot(a[j, j+1:n], b[j+1:n])) / a[j, j]
+    elseif op == 2
+        for n in axes(a, 2)
+            a[j, n], a[k, n] = a[k, n], a[j, n]
         end
-        return
     end
-    
-    # Check answer to calculate e = b-Ax
-    function check_ans(savea, saveb, x, n, err)
-        for j = 1:n
-            if abs(saveb[j] - dot(savea[j, 1:n], x[1:n])) > err
-                println("Solution is wrong!")
-                exit()
-            end
-        end
-        return
-    end
-    
-    print("Dimension: n = ")
-    n = parse(UInt64, readline())
-    n = n-1
-    err = 5.e-13
-    
-    # Initialize A, b: Using tridiagonal matrix 
-    a = zeros(n, n) 
+    return
+end
+
+# Gauss-Jordan with partial pivoting
+function gauss_jordan(a, perm, n, p)
     for j = 1:n
-        a[j, j] = 2
+        if p
+            js = argmax(abs.(a[j:n, j]))
+            jnew = j+js-1
+            perm[j] = jnew
+            swap(a, j, jnew, 2)
+        end
+        m = 1/a[j, j]; a[j, j] = m
+        col = m*a[:, j]; row = a[j, :]
+        a = a-col*row'
+        a[:, j] = col; a[j, :] = -m*row; a[j, j] = m
     end
-    for j = 1:n-1
-        a[j, j+1] = -1
-        a[j+1, j] = -1
-        a[j+1, 1] = (j+1)^3
-        a[1, j+1] = -(j+1)^2
-        a[n, j+1] = -1/(j+1)
+    if p
+        for j = n-1:-1:1
+            if j != perm[j]
+                swap(a, j, perm[j], 1)
+            end
+        end
     end
-    b = zeros(n)
-    b[1] = 1
+    return
+end
+
+function check_ans(a, savea, err)
+    diag = zeros(n, n)
+    diag = a*savea
+    for j = 1:n
+        for k = 1:n
+            if j == k 
+                if abs(diag[k, j]-1) > err
+                    println("Inverse is not obtained")
+                    exit()
+                end
+            else
+                if abs(diag[k, j]) > err
+                    println("Inverse is not obtained")
+                    exit()
+                end
+            end
+        end
+    end
+    return
+end
+
+print("Dimension: n = ")
+n = parse(UInt64, readline())
+print("Partial pivoting (1: use, 0: don't use): p = ")
+p = parse(Bool, readline())
+err = 1.e-5
     
-    # Copy A, b for check
-    savea = copy(a) 
-    saveb = copy(b)
+# Initialize A, permutation matrix
+a = zeros(n, n) 
+for j = 1:n
+    a[j, j] = 4
+end
+for j = 1:n-1
+    a[j, j+1] = -1
+    a[j+1, j] = -1
+    a[min(j+3, n), j] = -5
+    a[j, min(j+2, n)] = -7
+end
+perm = collect(1:n)
     
-    gauss_elimination(a, b, n)
-    back_substitution(a, b, n)
-    check_ans(savea, saveb, b, n, err)
+# Copy A for check
+savea = copy(a)
+
+gauss_jordan(a, perm, n, p)
+# check_ans(a, savea, err)
     
-    println("Solution: x = " )
-    println(b)
+println("Original matrix A = ")
+println(savea)
+println("Inverse of A = ")
+println(a)
+println(a*savea)
+println("Condition number of A in l2-norm = ")
+println(norm(a, 2)*norm(savea, p))
